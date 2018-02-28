@@ -1,5 +1,11 @@
 # Xander1998's K9 Script
 
+## Installation
+1. Drag K9 into resources folder.
+2. Add resource name to K9 config.
+3. Modify config to your liking
+4. Start server.
+
 ## Config
 1. K9Config.OpenMenuIdentifierRestriction | true / false
 2. K9Config.OpenMenuPedRestriction | true / false
@@ -15,3 +21,8 @@
 ## TODO LIST
 1. Vehicle Searching
 2. Vehicle Toggling (Getting in and out)
+
+## Controls
+1. OPEN MENU | LeftALT + HOME
+2. FOLLOW / STOP | G
+3. ATTACK | Point + G
