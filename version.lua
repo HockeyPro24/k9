@@ -1,5 +1,5 @@
 --[[ Version Checker ]]--
-local version = 2
+local version = 3
 
 
 AddEventHandler("onResourceStart", function(resource)
