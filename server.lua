@@ -43,13 +43,9 @@ end)
 
 RegisterServerEvent("K9:RequestItems")
 AddEventHandler("K9:RequestItems", function()
+    print("Requested Items")
     local src = source
-    -- Search Items Here
-end)
-
-RegisterServerEvent("K9:KillPlayerRequest")
-AddEventHandler("K9:KillPlayerRequest", function(id)
-    TriggerClientEvent("K9:KillPlayer", id)
+    TriggerClientEvent("K9:SearchVehicle", src, K9Config.Items)
 end)
 
 --[[ Functions ]]--

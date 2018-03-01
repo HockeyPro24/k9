@@ -25,7 +25,14 @@ K9Config.SearchType = "Random"
 
 -- Used for Random Search Type --
 K9Config.Items = {
-
+	{item = "Cocaine", illegal = true},
+	{item = "Marijuana", illegal = true},
+	{item = "Blunt Spray", illegal = false},
+	{item = "Crowbar", illegal = false},
+	{item = "Lockpicks", illegal = false},
+	{item = "Baggies", illegal = false},
+	{item = "Used Needle", illegal = false},
+	{item = "Open Container", illegal = false},
 }
 
 -- Language --
@@ -34,6 +41,8 @@ K9Config.Languages = {
 	["English"] = {
 		follow = "Come",
 		stop = "Heel",
-		attack = "Attack"
+		attack = "Bite",
+		enter = "In",
+		exit = "Out"
 	}
 }

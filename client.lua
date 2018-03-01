@@ -49,20 +49,25 @@ local language = {}
     end)
 
     RegisterNUICallback("vehicletoggle", function(data)
-        Citizen.Trace("vehicletoggle callback")
         TriggerServerEvent("K9:RequestVehicleToggle")
+    end)
+
+    RegisterNUICallback("vehiclesearch", function(data)
+        TriggerServerEvent("K9:RequestItems")
     end)
 
 --]]
 
 --[[ Main Event Handlers ]]--
 
+    -- Updates Language Settings
     RegisterNetEvent("K9:UpdateLanguage")
     AddEventHandler("K9:UpdateLanguage", function(commands)
         language = commands
         Citizen.Trace(tostring(json.encode(language)))
     end)
 
+    -- Opens K9 Menu
     RegisterNetEvent("K9:OpenMenu")
     AddEventHandler("K9:OpenMenu", function(pedRestriction, pedList)
         if pedRestriction then
@@ -76,11 +81,13 @@ local language = {}
         end
     end)
 
+    -- Error for Identifier Whitelist
     RegisterNetEvent("K9:IdentifierRestricted")
     AddEventHandler("K9:IdentifierRestricted", function()
         Notification(tostring("~r~You do not match any identifiers in the whitelist."))
     end)
 
+    -- Spawns and Deletes K9
     RegisterNetEvent("K9:ToggleK9")
     AddEventHandler("K9:ToggleK9", function(model)
         if spawned_ped == nil then
@@ -128,6 +135,7 @@ local language = {}
         end
     end)
 
+    -- Toggles K9 to Follow / Heel
     RegisterNetEvent("K9:ToggleFollow")
     AddEventHandler("K9:ToggleFollow", function()
         if spawned_ped ~= nil then
@@ -159,29 +167,31 @@ local language = {}
         end
     end)
 
+    -- Toggles K9 In and Out of Vehicles
     RegisterNetEvent("K9:ToggleVehicle")
     AddEventHandler("K9:ToggleVehicle", function(isRestricted, vehList)
         if IsPedInAnyVehicle(spawned_ped, false) then
             TaskLeaveVehicle(spawned_ped, GetVehiclePedIsIn(spawned_ped, false), 256)
+            Notification(tostring(k9_name .. " " .. language.exit))
         else
             local plyCoords = GetEntityCoords(GetLocalPed(), false)
             local vehicle = GetVehicleAheadOfPlayer()
             local door = GetClosestVehicleDoor(vehicle)
-
             if door ~= false then
                 if isRestricted then
                     if CheckVehicleRestriction(vehicle, vehList) then
-                        
-
-
+                        TaskEnterVehicle(spawned_ped, vehicle, -1, door, 2.0, 1, 0)
+                        Notification(tostring(k9_name .. " " .. language.enter))
                     end
                 else
                     TaskEnterVehicle(spawned_ped, vehicle, -1, door, 2.0, 1, 0)
+                    Notification(tostring(k9_name .. " " .. language.enter))
                 end
             end
         end
     end)
 
+    -- Triggers K9 to Attack
     RegisterNetEvent("K9:ToggleAttack")
     AddEventHandler("K9:ToggleAttack", function(target)
         if not attacking then
@@ -213,24 +223,56 @@ local language = {}
         end
     end)
 
+    -- Triggers K9 to Search Vehicle
     RegisterNetEvent("K9:SearchVehicle")
     AddEventHandler("K9:SearchVehicle", function(items)
-        
+        local vehicle = GetVehicleAheadOfPlayer()
+        if vehicle ~= 0 then
+            Citizen.Trace("Started Searching")
+
+            local offsetOne = GetOffsetFromEntityGivenWorldCoords(vehicle, 1.0, 1.0, 0.0)
+            -- Get Item
+            TaskGoToCoordAnyMeans(spawned_ped, offsetOne.x, offsetOne.y, offsetOne.z, 5.0, 0, 0, 786603, 0xbf800000)
+
+            Citizen.Wait(3000)
+
+            local offsetTwo = GetOffsetFromEntityGivenWorldCoords(vehicle, -1.0, 1.0, 0.0)
+            -- Get Item
+            TaskGoToCoordAnyMeans(spawned_ped, offsetTwo.x, offsetTwo.y, offsetTwo.z, 5.0, 0, 0, 786603, 0xbf800000)
+
+            Citizen.Wait(3000)
+
+            local offsetThree = GetOffsetFromEntityGivenWorldCoords(vehicle, -1.0, -1.0, 0.0)
+            -- Get Item
+            TaskGoToCoordAnyMeans(spawned_ped, offsetThree.x, offsetThree.y, offsetThree.z, 5.0, 0, 0, 786603, 0xbf800000)
+
+            Citizen.Wait(3000)
+
+            local offsetFour = GetOffsetFromEntityGivenWorldCoords(vehicle, 1.0, -1.0, 0.0)
+            -- Get Item
+            TaskGoToCoordAnyMeans(spawned_ped, offsetFour.x, offsetFour.y, offsetFour.z, 5.0, 0, 0, 786603, 0xbf800000)
+
+            Citizen.Wait(3000)
+
+            Citizen.Trace("Finished Searching")
+        end
     end)
 
 --]]
 
---[[ Main Looped Thread ]]--
+--[[ Threads ]]
 
     -- Controls Menu
     Citizen.CreateThread(function()
         while true do
             Citizen.Wait(0)
 
+            -- Trigger Opens Menu
             if IsControlPressed(1, 19) and IsControlJustPressed(1, 213) then
                 TriggerServerEvent("K9:RequestOpenMenu")
             end
 
+            -- Trigger Attack
             if IsControlJustPressed(1, 47) and IsPlayerFreeAiming(PlayerId()) then
                 local bool, target = GetEntityPlayerIsFreeAimingAt(PlayerId())
 
@@ -241,6 +283,7 @@ local language = {}
                 end
             end
 
+            -- Trigger Follow
             if IsControlJustPressed(1, 47) and not IsPlayerFreeAiming(PlayerId()) then
                 TriggerEvent("K9:ToggleFollow")
             end
@@ -248,16 +291,12 @@ local language = {}
         end
     end)
 
-    RegisterNetEvent("K9:KillPlayer")
-    AddEventHandler("K9:KillPlayer", function()
-        SetEntityHealth(GetPlayerPed(PlayerId()), 0)
-    end)
-
     -- DO NOT TOUCH (CLEANER)
     Citizen.CreateThread(function()
         while true do
             Citizen.Wait(0)
-            -- Resetting K9 Settings
+
+            -- Setting K9 Settings
             if just_started then
                 Citizen.Wait(1000)
                 local resource = GetCurrentResourceName()
@@ -270,21 +309,9 @@ local language = {}
                 TriggerServerEvent("K9:SendLanguage")
             end
 
-            -- Removes K9 When Dead
+            -- Deletes K9 when you die
             if spawned_ped ~= nil and IsEntityDead(GetLocalPed()) then
                 TriggerEvent("K9:ToggleK9")
-            end
-
-            if attacking then
-                if IsPedAPlayer(GetPlayerPed(attacked_player)) then
-                    local k9Coods = GetEntityCoords(spawned_ped, false)
-                    local otherPedCoords = GetEntityCoords(GetPlayerPed(attacked_player), alive)
-                    local distance = Vdist(k9Coods.x, k9Coods.y, k9Coods.z, otherPedCoords.x, otherPedCoords.y, otherPedCoords.z)
-                    if distance < 5.0 then
-                        Citizen.Trace("KILLING PLAYER")
-                        TriggerServerEvent("K9:KillPlayerRequest", attacked_player)
-                    end
-                end
             end
         end
     end)
@@ -293,14 +320,15 @@ local language = {}
 
 --[[ EXTRA FUNCTIONS ]]--
 
+-- Gets Local Ped
 function GetLocalPed()
     return GetPlayerPed(PlayerId())
 end
 
+-- Gets Control Of Ped
 function RequestNetworkControl(callback)
     local netId = NetworkGetNetworkIdFromEntity(spawned_ped)
     local timer = 0
-
     NetworkRequestControlOfNetworkId(netId)
     while not NetworkHasControlOfNetworkId(netId) do
         Citizen.Wait(1)
@@ -314,6 +342,7 @@ function RequestNetworkControl(callback)
     callback(true)
 end
 
+-- Gets Players
 function GetPlayers()
     local players = {}
     for i = 0, 32 do
@@ -324,6 +353,18 @@ function GetPlayers()
     return players
 end
 
+function ChooseItem(items)
+    local number = math.random(1, 100)
+
+    if number > 70 and number < 95 then
+        local randomItem = math.random(1, #items)
+        return items[randomItem]
+    else
+        return false
+    end
+end
+
+-- Gets Player ID
 function GetPlayerId(target_ped)
     local players = GetPlayers()
     for a = 1, #players do
@@ -336,6 +377,7 @@ function GetPlayerId(target_ped)
     return 0
 end
 
+-- Checks Ped Restriction
 function CheckPedRestriction(ped, PedList)
 	for i = 1, #PedList do
 		if GetHashKey(PedList[i]) == GetEntityModel(ped) then
@@ -345,6 +387,7 @@ function CheckPedRestriction(ped, PedList)
 	return false
 end
 
+-- Checks Vehicle Restriction
 function CheckVehicleRestriction(vehicle, VehicleList)
 	for i = 1, #VehicleList do
 		if GetHashKey(VehicleList[i]) == GetEntityModel(vehicle) then
@@ -354,6 +397,7 @@ function CheckVehicleRestriction(vehicle, VehicleList)
 	return false
 end
 
+-- Gets Vehicle Ahead Of Player
 function GetVehicleAheadOfPlayer()
     local lPed = GetLocalPed()
     local lPedCoords = GetEntityCoords(lPed, alive)
@@ -368,6 +412,7 @@ function GetVehicleAheadOfPlayer()
     end
 end
 
+-- Gets Closest Door To Player
 function GetClosestVehicleDoor(vehicle)
     local plyCoords = GetEntityCoords(GetLocalPed(), false)
 	local backleft = GetWorldPositionOfEntityBone(vehicle, GetEntityBoneIndexByName(vehicle, "door_dside_r"))
@@ -386,6 +431,7 @@ function GetClosestVehicleDoor(vehicle)
     return found_door
 end
 
+-- Displays Notification
 function Notification(message)
 	SetNotificationTextEntry("STRING")
 	AddTextComponentString(message)

@@ -59,7 +59,6 @@ var app = new Vue({
         ChooseK9Model(model) {
             this.k9_model_modal = false;
             this.dog_model = model;
-            console.log(this.dog_model);
         },
 
         // Updates Resource Name
@@ -92,12 +91,19 @@ var app = new Vue({
         },
 
         VehicleToggle() {
-            console.log("TRIGGERED VEHICLETOGGLE CALLBACK");
             axios.post("http://" + this.resource_name + "/vehicletoggle", {}).then(function(response) {
                 console.log(response);
             }).catch(function(error) {
                 console.log(error);
             });
+        },
+
+        VehicleSearch() {
+            axios.post("http://" + this.resource_name + "/vehiclesearch", {}).then(function(response) {
+                console.log(response);
+            }).catch(function(error) {
+                console.log(error);
+            })
         },
 
         // Send POST Close Menu
