@@ -1,5 +1,8 @@
 # Xander1998's K9 Script
 
+## IMPORTANT
+ANY player that has an option turned on in their trainers for (All peds ignore) the attack function will break!
+
 ## Installation
 1. Drag K9 into resources folder.
 2. Add resource name to K9 config.
