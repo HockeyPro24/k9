@@ -22,6 +22,7 @@ K9Config.VehiclesList = {
 
 -- Searching Type ( RANDOM [AVAILABLE] | VRP [NOT AVAILABLE] | ESX [NOT AVAILABLE] )
 K9Config.SearchType = "Random"
+K9Config.OpenDoorsOnSearch = false
 
 -- Used for Random Search Type --
 K9Config.Items = {

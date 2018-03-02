@@ -32,8 +32,8 @@
                         </div>
 
                         <div id="k9_animations_tab" v-show="current_tab == 'animation'">
-                            <v-btn block color="dark" dark @click="">Sit</v-btn>
-                            <v-btn block color="dark" dark @click="">Laydown</v-btn>
+                            <v-btn block color="dark" dark @click="DogSit()">Sit</v-btn>
+                            <v-btn block color="dark" dark @click="DogLaydown()">Laydown</v-btn>
                             <v-btn block color="dark" dark @click="OpenTab('main')">Go Back</v-btn>
                         </div>
 

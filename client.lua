@@ -10,10 +10,19 @@
     local playing_animation = false
 
     local animations = {
-        ["vehicle"] = {
-            dict = "creatures@rottweiler@in_vehicle@4x4",
-            getin = "get_in",
-            getout = "get_out"
+        ['Normal'] = {
+            sit = {
+                dict = "creatures@rottweiler@amb@world_dog_sitting@idle_a",
+                anim = "idle_b"
+            },
+            laydown = {
+                dict = "creatures@rottweiler@amb@sleep_in_kennel@",
+                anim = "sleep_in_kennel"
+            },
+            searchhit = {
+                dict = "creatures@rottweiler@indication@",
+                anim = "indicate_high"
+            }
         }
     }
 --]]
@@ -49,11 +58,27 @@ local language = {}
     end)
 
     RegisterNUICallback("vehicletoggle", function(data)
-        TriggerServerEvent("K9:RequestVehicleToggle")
+        if spawned_ped ~= nil then
+            TriggerServerEvent("K9:RequestVehicleToggle")
+        end
     end)
 
     RegisterNUICallback("vehiclesearch", function(data)
-        TriggerServerEvent("K9:RequestItems")
+        if spawned_ped ~= nil then
+            TriggerServerEvent("K9:RequestItems")
+        end
+    end)
+
+    RegisterNUICallback("sit", function(data)
+        if spawned_ped ~= nil then
+            PlayAnimation(animations['Normal'].sit.dict, animations['Normal'].sit.anim)
+        end
+    end)
+
+    RegisterNUICallback("laydown", function(data)
+        if spawned_ped ~= nil then
+            PlayAnimation(animations['Normal'].laydown.dict, animations['Normal'].laydown.anim)
+        end
     end)
 
 --]]
@@ -170,22 +195,38 @@ local language = {}
     -- Toggles K9 In and Out of Vehicles
     RegisterNetEvent("K9:ToggleVehicle")
     AddEventHandler("K9:ToggleVehicle", function(isRestricted, vehList)
-        if IsPedInAnyVehicle(spawned_ped, false) then
-            TaskLeaveVehicle(spawned_ped, GetVehiclePedIsIn(spawned_ped, false), 256)
-            Notification(tostring(k9_name .. " " .. language.exit))
-        else
-            local plyCoords = GetEntityCoords(GetLocalPed(), false)
-            local vehicle = GetVehicleAheadOfPlayer()
-            local door = GetClosestVehicleDoor(vehicle)
-            if door ~= false then
-                if isRestricted then
-                    if CheckVehicleRestriction(vehicle, vehList) then
+        if not searching then
+            if IsPedInAnyVehicle(spawned_ped, false) then
+                TaskLeaveVehicle(spawned_ped, GetVehiclePedIsIn(spawned_ped, false), 256)
+                Notification(tostring(k9_name .. " " .. language.exit))
+            else
+                if not IsPedInAnyVehicle(GetLocalPed(), false) then
+                    local plyCoords = GetEntityCoords(GetLocalPed(), false)
+                    local vehicle = GetVehicleAheadOfPlayer()
+                    local door = GetClosestVehicleDoor(vehicle)
+                    if door ~= false then
+                        if isRestricted then
+                            if CheckVehicleRestriction(vehicle, vehList) then
+                                TaskEnterVehicle(spawned_ped, vehicle, -1, door, 2.0, 1, 0)
+                                Notification(tostring(k9_name .. " " .. language.enter))
+                            end
+                        else
+                            TaskEnterVehicle(spawned_ped, vehicle, -1, door, 2.0, 1, 0)
+                            Notification(tostring(k9_name .. " " .. language.enter))
+                        end
+                    end
+                else
+                    local vehicle = GetVehiclePedIsIn(GetLocalPed(), false)
+                    local door = 1
+                    if isRestricted then
+                        if CheckVehicleRestriction(vehicle, vehList) then
+                            TaskEnterVehicle(spawned_ped, vehicle, -1, door, 2.0, 1, 0)
+                            Notification(tostring(k9_name .. " " .. language.enter))
+                        end
+                    else
                         TaskEnterVehicle(spawned_ped, vehicle, -1, door, 2.0, 1, 0)
                         Notification(tostring(k9_name .. " " .. language.enter))
                     end
-                else
-                    TaskEnterVehicle(spawned_ped, vehicle, -1, door, 2.0, 1, 0)
-                    Notification(tostring(k9_name .. " " .. language.enter))
                 end
             end
         end
@@ -194,7 +235,7 @@ local language = {}
     -- Triggers K9 to Attack
     RegisterNetEvent("K9:ToggleAttack")
     AddEventHandler("K9:ToggleAttack", function(target)
-        if not attacking then
+        if not attacking and not searching then
             if IsPedAPlayer(target) then
                 local has_control = false
                 RequestNetworkControl(function(cb)
@@ -225,36 +266,88 @@ local language = {}
 
     -- Triggers K9 to Search Vehicle
     RegisterNetEvent("K9:SearchVehicle")
-    AddEventHandler("K9:SearchVehicle", function(items)
+    AddEventHandler("K9:SearchVehicle", function(items, openDoors)
         local vehicle = GetVehicleAheadOfPlayer()
-        if vehicle ~= 0 then
-            Citizen.Trace("Started Searching")
+        Citizen.Trace(tostring(vehicle))
+        Citizen.Trace(tostring(json.encode(items)))
+        if vehicle ~= 0 and not searching then
+            searching = true
+            local found_table = {}
 
-            local offsetOne = GetOffsetFromEntityGivenWorldCoords(vehicle, 1.0, 1.0, 0.0)
-            -- Get Item
-            TaskGoToCoordAnyMeans(spawned_ped, offsetOne.x, offsetOne.y, offsetOne.z, 5.0, 0, 0, 786603, 0xbf800000)
+            Notification(tostring(k9_name .. " has began searching..."))
+            
+            if openDoors then
+                SetVehicleDoorOpen(vehicle, 0, 0, 0)
+                SetVehicleDoorOpen(vehicle, 1, 0, 0)
+                SetVehicleDoorOpen(vehicle, 2, 0, 0)
+                SetVehicleDoorOpen(vehicle, 3, 0, 0)
+                SetVehicleDoorOpen(vehicle, 4, 0, 0)
+                SetVehicleDoorOpen(vehicle, 5, 0, 0)
+                SetVehicleDoorOpen(vehicle, 6, 0, 0)
+                SetVehicleDoorOpen(vehicle, 7, 0, 0)
+            end
 
-            Citizen.Wait(3000)
+            -- Back Right
+            local offsetOne = GetOffsetFromEntityInWorldCoords(vehicle, 2.0, -2.0, 0.0)
+            TaskGoToCoordAnyMeans(spawned_ped, offsetOne.x, offsetOne.y, offsetOne.z, 5.0, 0, 0, 1, 10.0)
+            local oneItem = ChooseItem(items)
+            if oneItem ~= false then
+                table.insert(found_table, oneItem)
+            end
 
-            local offsetTwo = GetOffsetFromEntityGivenWorldCoords(vehicle, -1.0, 1.0, 0.0)
-            -- Get Item
-            TaskGoToCoordAnyMeans(spawned_ped, offsetTwo.x, offsetTwo.y, offsetTwo.z, 5.0, 0, 0, 786603, 0xbf800000)
+            Citizen.Wait(7000)
 
-            Citizen.Wait(3000)
+            -- Front Right
+            local offsetTwo = GetOffsetFromEntityInWorldCoords(vehicle, 2.0, 2.0, 0.0)
+            TaskGoToCoordAnyMeans(spawned_ped, offsetTwo.x, offsetTwo.y, offsetTwo.z, 5.0, 0, 0, 1, 10.0)
+            local twoItem = ChooseItem(items)
+            if twoItem ~= false then
+                table.insert(found_table, twoItem)
+            end
 
-            local offsetThree = GetOffsetFromEntityGivenWorldCoords(vehicle, -1.0, -1.0, 0.0)
-            -- Get Item
-            TaskGoToCoordAnyMeans(spawned_ped, offsetThree.x, offsetThree.y, offsetThree.z, 5.0, 0, 0, 786603, 0xbf800000)
+            Citizen.Wait(7000)
 
-            Citizen.Wait(3000)
+            -- Front Left
+            local offsetThree = GetOffsetFromEntityInWorldCoords(vehicle, -2.0, 2.0, 0.0)
+            TaskGoToCoordAnyMeans(spawned_ped, offsetThree.x, offsetThree.y, offsetThree.z, 5.0, 0, 0, 1, 10.0)
+            local threeItem = ChooseItem(items)
+            if threeItem ~= false then
+                table.insert(found_table, threeItem)
+            end
 
-            local offsetFour = GetOffsetFromEntityGivenWorldCoords(vehicle, 1.0, -1.0, 0.0)
-            -- Get Item
-            TaskGoToCoordAnyMeans(spawned_ped, offsetFour.x, offsetFour.y, offsetFour.z, 5.0, 0, 0, 786603, 0xbf800000)
+            Citizen.Wait(7000)
 
-            Citizen.Wait(3000)
+            -- Front Right
+            local offsetFour = GetOffsetFromEntityInWorldCoords(vehicle, -2.0, -2.0, 0.0)
+            TaskGoToCoordAnyMeans(spawned_ped, offsetFour.x, offsetFour.y, offsetFour.z, 5.0, 0, 0, 1, 10.0)
+            local fourItem = ChooseItem(items)
+            if fourItem ~= false then
+                table.insert(found_table, fourItem)
+            end
 
-            Citizen.Trace("Finished Searching")
+            Citizen.Wait(7000)
+
+            if openDoors then
+                SetVehicleDoorsShut(vehicle, 0)
+            end
+
+            local stringified_table = {}
+            local found_illegal_item = false
+            for a = 1, #found_table do
+                table.insert(stringified_table, found_table[a].item)
+                if found_table[a].illegal then
+                    found_illegal_item = true
+                end
+            end
+
+            if found_illegal_item then
+                PlayAnimation(animations['Normal'].searchhit.dict, animations['Normal'].searchhit.anim)
+                Citizen.Wait(3000)
+                PlayAnimation(animations['Normal'].sit.dict, animations['Normal'].sit.anim)
+            end
+
+            Notification(tostring(k9_name .. " has found [ " .. tostring(table.concat(stringified_table, ", ")) .. " ]."))
+            searching = false
         end
     end)
 
@@ -353,15 +446,26 @@ function GetPlayers()
     return players
 end
 
+-- Get Searching item
 function ChooseItem(items)
     local number = math.random(1, 100)
 
-    if number > 70 and number < 95 then
+    if number > 70 and number < 95 then -- 70 | 95
         local randomItem = math.random(1, #items)
         return items[randomItem]
     else
         return false
     end
+end
+
+-- Set K9 Animation (Sit / Laydown)
+function PlayAnimation(dict, anim)
+    RequestAnimDict(dict)
+    while not HasAnimDictLoaded(dict) do
+        Citizen.Wait(0)
+    end
+
+    TaskPlayAnim(spawned_ped, dict, anim, 8.0, -8.0, -1, 2, 0.0, 0, 0, 0)
 end
 
 -- Gets Player ID

@@ -45,7 +45,7 @@ RegisterServerEvent("K9:RequestItems")
 AddEventHandler("K9:RequestItems", function()
     print("Requested Items")
     local src = source
-    TriggerClientEvent("K9:SearchVehicle", src, K9Config.Items)
+    TriggerClientEvent("K9:SearchVehicle", src, K9Config.Items, K9Config.OpenDoorsOnSearch)
 end)
 
 --[[ Functions ]]--

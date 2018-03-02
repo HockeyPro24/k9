@@ -106,6 +106,22 @@ var app = new Vue({
             })
         },
 
+        DogSit() {
+            axios.post("http://" + this.resource_name + "/sit", {}).then(function(response) {
+                console.log(response);
+            }).catch(function(error) {
+                console.log(error);
+            })
+        },
+
+        DogLaydown() {
+            axios.post("http://" + this.resource_name + "/laydown", {}).then(function(response) {
+                console.log(response);
+            }).catch(function(error) {
+                console.log(error);
+            })
+        },
+
         // Send POST Close Menu
         SendCloseMenuPost() {
             axios.post("http://" + this.resource_name + "/closemenu", {}).then(function(response) {
