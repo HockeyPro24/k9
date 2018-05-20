@@ -430,6 +430,7 @@ function RequestNetworkControl(callback)
         if timer == 5000 then
             Citizen.Trace("Control failed")
             callback(false)
+            break
         end
     end
     callback(true)
