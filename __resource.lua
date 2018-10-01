@@ -21,7 +21,13 @@ files {
     "html/images/retriever.png"
 }
 
-server_script "version.lua"
-server_script "config.lua"
-server_script "server.lua"
-client_script "client.lua"
+server_scripts {
+  "version.lua",
+  "config.lua",
+  "server.lua"
+}
+
+client_scripts {
+  "config.lua",
+  "client.lua"
+}
