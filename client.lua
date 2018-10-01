@@ -8,6 +8,8 @@
     local attacked_player = 0
     local searching = false
     local playing_animation = false
+    local k9_dead = false
+    local barking = false
 
     local animations = {
         ['Normal'] = {
@@ -125,6 +127,7 @@ local language = {}
             local plyCoords = GetOffsetFromEntityInWorldCoords(GetLocalPed(), 0.0, 2.0, 0.0)
             local dog = CreatePed(28, ped, plyCoords.x, plyCoords.y, plyCoords.z, GetEntityHeading(GetLocalPed()), 0, 1)
             spawned_ped = dog
+            SetEntityHealth(spawned_ped, K9Config.SpawnHelath)
             SetBlockingOfNonTemporaryEvents(spawned_ped, true)
             SetPedFleeAttributes(spawned_ped, 0, 0)
             SetPedRelationshipGroupHash(spawned_ped, GetHashKey("k9"))
@@ -156,6 +159,7 @@ local language = {}
                 following = false
                 searching = false
                 playing_animation = false
+                k9_dead = false
             end
         end
     end)
@@ -275,7 +279,7 @@ local language = {}
             local found_table = {}
 
             Notification(tostring(k9_name .. " has began searching..."))
-            
+
             if openDoors then
                 SetVehicleDoorOpen(vehicle, 0, 0, 0)
                 SetVehicleDoorOpen(vehicle, 1, 0, 0)
@@ -351,6 +355,16 @@ local language = {}
         end
     end)
 
+    RegisterNetEvent("K9:ToggleBark")
+    AddEventHandler("K9:ToggleBark", function()
+      barking = not barking
+      if barking then
+        Notification(tostring(k9_name .. " " .. language.bark .. "."))
+      else
+        Notification(tostring(k9_name .. " " .. "No longer " .. language.barking .. "."))
+      end
+    end)
+
 --]]
 
 --[[ Threads ]]
@@ -366,7 +380,7 @@ local language = {}
             end
 
             -- Trigger Attack
-            if IsControlJustPressed(1, 47) and IsPlayerFreeAiming(PlayerId()) then
+            if IsControlJustPressed(1, K9Config.ShortcutKey) and IsPlayerFreeAiming(PlayerId()) then
                 local bool, target = GetEntityPlayerIsFreeAimingAt(PlayerId())
 
                 if bool then
@@ -377,8 +391,13 @@ local language = {}
             end
 
             -- Trigger Follow
-            if IsControlJustPressed(1, 47) and not IsPlayerFreeAiming(PlayerId()) then
+            if IsControlJustPressed(1, K9Config.ShortcutKey) and not IsPlayerFreeAiming(PlayerId()) then
                 TriggerEvent("K9:ToggleFollow")
+            end
+
+            -- Trigger Barking
+            if IsControlJustPressed(1, K9Config.BarkKey) then
+                TriggerEvent("K9:ToggleBark")
             end
 
         end
@@ -389,7 +408,13 @@ local language = {}
         while true do
             Citizen.Wait(0)
 
-            -- Setting K9 Settings
+            if spawned_ped then
+              if IsEntityDead(spawned_ped) and k9_dead == false then
+                k9_dead = true
+                Notification(tostring("~r~Your K9 has died."))
+              end
+            end
+
             if just_started then
                 Citizen.Wait(1000)
                 local resource = GetCurrentResourceName()
@@ -409,9 +434,31 @@ local language = {}
         end
     end)
 
+    -- DO NOT TOUCH (BARKING)
+    Citizen.CreateThread(function()
+        while true do
+            Citizen.Wait(0)
+
+            if spawned_ped then
+              if barking then
+                TriggerServerEvent("K9:SendBark", NetworkGetNetworkIdFromEntity(spawned_ped))
+                Citizen.Wait(math.random(500, 1000))
+              end
+            end
+          end
+    end)
+
 --]]
 
 --[[ EXTRA FUNCTIONS ]]--
+
+-- BARKING
+RegisterNetEvent("K9:Bark")
+AddEventHandler("K9:Bark", function(pedid)
+  local ped = NetworkGetEntityFromNetworkId(pedid)
+  SetPedScream(ped)
+  PlayPain(ped, math.random(6, 8), 0)
+end)
 
 -- Gets Local Ped
 function GetLocalPed()

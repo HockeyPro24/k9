@@ -4,6 +4,11 @@ AddEventHandler("K9:SendLanguage", function()
     TriggerClientEvent("K9:UpdateLanguage", s, K9Config.Languages[K9Config.LanguageChoice])
 end)
 
+RegisterServerEvent("K9:SendBark")
+AddEventHandler("K9:SendBark", function(pedid)
+    TriggerClientEvent("K9:Bark", -1, pedid)
+end)
+
 RegisterServerEvent("K9:RequestOpenMenu")
 AddEventHandler("K9:RequestOpenMenu", function()
     local src = source
