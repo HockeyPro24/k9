@@ -127,7 +127,7 @@ local language = {}
             local plyCoords = GetOffsetFromEntityInWorldCoords(GetLocalPed(), 0.0, 2.0, 0.0)
             local dog = CreatePed(28, ped, plyCoords.x, plyCoords.y, plyCoords.z, GetEntityHeading(GetLocalPed()), 0, 1)
             spawned_ped = dog
-            SetEntityHealth(spawned_ped, K9Config.SpawnHealth)
+            SetEntityHealth(spawned_ped, K9Config.SpawnHelath)
             SetBlockingOfNonTemporaryEvents(spawned_ped, true)
             SetPedFleeAttributes(spawned_ped, 0, 0)
             SetPedRelationshipGroupHash(spawned_ped, GetHashKey("k9"))
