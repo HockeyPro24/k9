@@ -1,11 +1,6 @@
 K9Config = {}
 K9Config = setmetatable(K9Config, {})
 
--- https://docs.fivem.net/game-references/controls/
-K9Config.ShortcutKey = 47
-K9Config.BarkKey = 214
-
-K9Config.SpawnHealth = 100
 K9Config.OpenMenuIdentifierRestriction = true
 K9Config.OpenMenuPedRestriction = true
 K9Config.LicenseIdentifiers = {
@@ -22,7 +17,7 @@ K9Config.PedsList = {
 -- Restricts the dog to getting into certain vehicles
 K9Config.VehicleRestriction = false
 K9Config.VehiclesList = {
-
+	
 }
 
 -- Searching Type ( RANDOM [AVAILABLE] | VRP [NOT AVAILABLE] | ESX [NOT AVAILABLE] )
@@ -49,7 +44,6 @@ K9Config.Languages = {
 		stop = "Heel",
 		attack = "Bite",
 		enter = "In",
-		exit = "Out",
-		barking = "Barking"
+		exit = "Out"
 	}
 }
