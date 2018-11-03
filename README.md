@@ -10,7 +10,7 @@ ANY player that has an option turned on in their trainers for (All peds ignore) 
 
 ## Installation
 1. Drag K9 into resources folder.
-2. Add resource name to server config.
+2. Add resource name to K9 config.
 3. Modify config to your liking
 4. Start server.
 
