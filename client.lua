@@ -398,7 +398,6 @@ local language = {}
                     name = resource
                 })
                 just_started = false
-                SetNuiFocus(false, false)
                 TriggerServerEvent("K9:SendLanguage")
             end
 
